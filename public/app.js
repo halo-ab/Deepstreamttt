@@ -37,7 +37,7 @@ let networkRetries = 0;
 
 /* ── JSON source (server-side proxy first, raw fallback) ── */
 const JSON_URL =
-  "https://raw.githubusercontent.com/drmlive/fancode-live-events/refs/heads/main/fancode.json";
+  "https://raw.githubusercontent.com/doctor-8trange/zyphx8/refs/heads/main/data/fancode.m3u";
 const REFRESH_MS = 5 * 60 * 1000;   // 5 minutes
 
 /* ── Direct stream URL — headers injected via xhrSetup below ── */

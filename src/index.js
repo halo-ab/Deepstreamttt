@@ -5,7 +5,7 @@
  */
 
 const JSON_URL =
-  "https://raw.githubusercontent.com/drmlive/fancode-live-events/refs/heads/main/fancode.json";
+  "https://raw.githubusercontent.com/doctor-8trange/zyphx8/refs/heads/main/data/fancode.m3u";
 
 const UPSTREAM_HEADERS = {
   Referer:      "https://www.fancode.com/",

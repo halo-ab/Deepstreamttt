@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
+  <meta name="theme-color" content="#070b14" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="DeepStream — Watch Formula 1, Cricket, Football and more live sports free in one place." />
+  <title>DeepStream — Live Sports Streaming Free</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app" id="view-home">
+
+    <!-- ══ HOME VIEW ════════════════════════════════════════ -->
+    <div id="home-view">
+
+      <!-- ══ HEADER ════════════════════════════════════════════ -->
+      <header class="header">
+      <div class="brand">
+        <div class="brand-icon">
+          <img src="logo.png" alt="DeepStream" class="brand-logo-img" />
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">DeepStream</span>
+          <span class="brand-sub">Live Sports Streaming</span>
+        </div>
+      </div>
+      <div class="header-search">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="search" id="channel-search" placeholder="Search matches…" enterkeyhint="search" />
+        </div>
+      </div>
+      <div id="channel-count" class="header-count" style="display:none">Loading…</div>
+    </header>
+
+
+      <!-- Hero card -->
+      <div class="hero-card">
+        <div class="hero-card-inner">
+          <div class="hero-live-pill">
+            <span class="hero-live-dot"></span>
+            STREAMING NOW
+          </div>
+          <h1 class="hero-title">EVERY LIVE MATCH.<br><em class="hero-em-blue">ONE PLACE.</em></h1>
+          <p class="hero-desc">Watch Formula 1, Cricket, Football, Kabaddi &amp; more — all free only at Deepstream.</p>
+          <div class="hero-stats" id="hero-stats">
+            <div class="hero-stat">
+              <span class="stat-value" id="stat-events">—</span>
+              <span class="stat-label">Live Streams</span>
+            </div>
+            <div class="hero-stat">
+              <span class="stat-value" id="stat-cats">—</span>
+              <span class="stat-label">Categories</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category pills -->
+      <div class="category-bar" id="category-bar" style="display:none">
+        <div class="category-scroll" id="category-scroll">
+          <!-- injected by JS -->
+        </div>
+      </div>
+
+      <!-- Matches list -->
+      <div class="matches-section" id="events-section" style="display:none">
+        <div id="channel-list" class="matches-list">
+          <div class="empty-state">
+            <div class="spinner"></div>
+            <p>Loading matches…</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ UPCOMING TODAY ════════════════════════════════════ -->
+      <div class="upcoming-section" id="upcoming-section" style="display:none">
+        <div class="upcoming-header">
+          <div class="upcoming-header-left">
+            <div class="upcoming-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div>
+              <div class="upcoming-title">Upcoming Matches</div>
+              <div class="upcoming-sub">Sorted by start time · IST</div>
+            </div>
+          </div>
+          <span class="upcoming-badge" id="upcoming-badge"></span>
+        </div>
+        <div class="upcoming-list" id="upcoming-list"></div>
+      </div>
+
+    </div><!-- /home-view -->
+
+    <!-- ══ PLAYER VIEW (hidden until match selected) ════════ -->
+    <div id="player-view" class="player-view hidden">
+
+      <!-- Player header with back -->
+      <header class="player-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <img src="logo.png" alt="DeepStream" class="brand-logo-img" />
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">DeepStream</span>
+            <span class="brand-sub">Live Sports Streaming</span>
+          </div>
+        </div>
+        <button type="button" class="btn-back" id="btn-back-home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+          Back
+        </button>
+      </header>
+
+      <!-- Video player -->
+      <div class="player-wrap">
+        <video id="video" controls playsinline webkit-playsinline x5-playsinline muted autoplay preload="auto"></video>
+        <div id="player-overlay" class="player-overlay hidden">
+          <div class="overlay-content">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <polygon points="10 8 16 12 10 16 10 8"/>
+            </svg>
+            <p>Select a channel to start streaming</p>
+          </div>
+        </div>
+        <div id="player-loading" class="player-loading hidden">
+          <div class="spinner"></div>
+          <span>Connecting to stream…</span>
+        </div>
+        <div id="player-error" class="player-error hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p id="error-message">Unable to play stream</p>
+          <button type="button" id="btn-retry" class="btn btn-ghost">Retry</button>
+        </div>
+      </div>
+
+      <!-- Quality selector -->
+      <div id="quality-selector" class="quality-selector hidden"></div>
+
+      <!-- Now-playing info card -->
+      <div class="now-card" id="now-card">
+        <div class="now-live-pill">
+          <span class="now-live-dot"></span>
+          LIVE NOW
+        </div>
+        <div class="now-match">
+          <div class="now-teams" id="now-teams">
+            <span id="now-title">No channel selected</span>
+          </div>
+          <div class="now-meta">
+            <span id="now-group" class="now-group"></span>
+          </div>
+          <div id="now-url" class="now-url desktop-only"></div>
+        </div>
+        <img id="now-logo" class="now-logo hidden" alt="" />
+      </div>
+
+      <!-- More matches -->
+      <div class="more-section" id="suggestions-section" style="display:none">
+        <div class="more-header">
+          <span class="more-title">MORE MATCHES LIVE NOW</span>
+          <span class="more-count" id="more-count"></span>
+        </div>
+        <div class="more-scroll" id="suggestions-scroll">
+          <!-- injected by JS -->
+        </div>
+      </div>
+
+    </div><!-- /player-view -->
+
+    <!-- Legacy hooks for app.js (hidden) -->
+    <div id="drawer-backdrop" class="drawer-backdrop hidden" aria-hidden="true"></div>
+    <button type="button" id="btn-channels" style="display:none" aria-hidden="true"></button>
+    <aside id="sidebar" class="sidebar" aria-hidden="true">
+      <div class="sidebar-header">
+        <div class="sidebar-title-row">
+          <h2 class="sidebar-title mobile-only">Channels</h2>
+          <button type="button" id="btn-close-drawer" class="btn btn-icon mobile-only" aria-label="Close channels">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <footer class="footer">
+      <span>DeepStream</span>
+      <span class="dot">·</span>
+      <span>Live Sports Free</span>
+    </footer>
+  </div><!-- /app -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.6.0/shaka-player.compiled.min.js"></script>
+  <script src="app.js?v=4"></script>
+
+  <script>
+  (function patchDeepStream() {
+    "use strict";
+
+    /* ── DOM refs ── */
+    const homeView       = document.getElementById("view-home");
+    const homeInner      = document.getElementById("home-view");
+    const playerView     = document.getElementById("player-view");
+    const channelList    = document.getElementById("channel-list");
+    const sidebar        = document.getElementById("sidebar");
+    const categoryBar    = document.getElementById("category-bar");
+    const categoryScroll = document.getElementById("category-scroll");
+    const eventsSection  = document.getElementById("events-section");
+    const suggestionsSection = document.getElementById("suggestions-section");
+    const suggestionsScroll  = document.getElementById("suggestions-scroll");
+    const statEvents     = document.getElementById("stat-events");
+    const statCats       = document.getElementById("stat-cats");
+    const channelCountEl = document.getElementById("channel-count");
+    const moreCount      = document.getElementById("more-count");
+
+    /* Now-playing refs */
+    const nowTeams  = document.getElementById("now-teams");
+    const nowTitle  = document.getElementById("now-title");
+    const nowGroup  = document.getElementById("now-group");
+    const nowUrl    = document.getElementById("now-url");
+    const nowLogo   = document.getElementById("now-logo");
+
+    let allChannelData = [];
+    let activeGroup    = "All";
+    let initialized    = false;
+
+    /* ── util ── */
+    function esc(s) {
+      const d = document.createElement("div");
+      d.textContent = String(s || "");
+      return d.innerHTML;
+    }
+
+    /* Parse "TEAM A vs TEAM B" — stops team2 at (, -, –, or , so tournament info is excluded */
+    function parseMatchTitle(title) {
+      /* Match: anything TEAM1 <whitespace> vs <whitespace> TEAM2
+         TEAM2 stops at: ( - – , — so we get clean team names only */
+      const re = /^(.+?)\s+vs\.?\s+([^(\-\u2013\u2014,]+?)(?:\s*[\-(\u2013\u2014,].*)?$/i;
+      const m = title.match(re);
+      if (m && m[1] && m[2]) {
+        return { team1: m[1].trim(), team2: m[2].trim(), hasVs: true };
+      }
+      return { team1: title, team2: "", hasVs: false };
+    }
+
+    /* ── Build match title HTML with VS highlight ── */
+    function matchTitleHtml(title) {
+      const p = parseMatchTitle(title);
+      if (p.hasVs) {
+        return `<span class="team-name">${esc(p.team1)}</span><span class="vs-badge">VS</span><span class="team-name">${esc(p.team2)}</span>`;
+      }
+      return `<span class="team-name">${esc(title)}</span>`;
+    }
+
+    /* ── Stop video fully (audio + source) ── */
+    function stopVideo() {
+      const vid = document.getElementById("video");
+      if (!vid) return;
+      try {
+        vid.pause();                    // stop audio immediately
+        vid.removeAttribute("src");     // detach any direct src
+        vid.load();                     // reset media element
+      } catch (e) { /* ignore */ }
+      /* Also destroy HLS instance if app.js exposed it */
+      if (typeof window.__hlsInstance !== "undefined" && window.__hlsInstance) {
+        try { window.__hlsInstance.destroy(); window.__hlsInstance = null; } catch (e) {}
+      }
+    }
+
+    /* ── Views ── */
+    function showHome() {
+      stopVideo();                      // ← kill audio before hiding player
+      homeInner.style.display = "";
+      playerView.classList.add("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function showPlayer() {
+      homeInner.style.display = "none";
+      playerView.classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    /* ── Build main match card ── */
+    function buildMatchCard(ch) {
+      const card = document.createElement("div");
+      card.className = "match-card";
+      card.dataset.url = ch.url;
+
+      const logoHtml = ch.logo
+        ? `<img class="match-img" src="${esc(ch.logo)}" alt="${esc(ch.title)}" loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : "";
+      const imgFallback = `<div class="match-img-fb" style="${ch.logo ? "display:none" : "display:flex"}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/>
+          </svg>
+        </div>`;
+
+      card.innerHTML = `
+        <div class="match-thumb">
+          ${logoHtml}${imgFallback}
+          <div class="match-live-badge"><span class="match-live-dot"></span>LIVE</div>
+          <div class="match-cat-badge">${esc(ch.group)}</div>
+          <div class="match-play-overlay">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          </div>
+        </div>
+        <div class="match-info">
+          <div class="match-teams">${matchTitleHtml(ch.title)}</div>
+          <div class="match-sub">${ch.language ? `<span class="lang-badge">${esc(ch.language)}</span>` : ""}${esc(ch.group)}</div>
+        </div>
+      `;
+
+      card.addEventListener("click", () => triggerPlay(ch));
+      return card;
+    }
+
+    /* ── Build suggestion card (compact) ── */
+    function buildSugCard(ch) {
+      const card = document.createElement("div");
+      card.className = "sug-card";
+      card.dataset.url = ch.url;
+
+      const logoHtml = ch.logo
+        ? `<img class="sug-img" src="${esc(ch.logo)}" alt="" loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : "";
+      const imgFallback = `<div class="sug-img-fb" style="${ch.logo ? "display:none" : "display:flex"}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/>
+          </svg>
+        </div>`;
+
+      card.innerHTML = `
+        <div class="sug-thumb">
+          ${logoHtml}${imgFallback}
+          <div class="sug-live-badge"><span class="sug-live-dot"></span>LIVE</div>
+          <div class="sug-cat-badge">${esc(ch.group)}</div>
+        </div>
+        <div class="sug-info">
+          <div class="sug-teams">${matchTitleHtml(ch.title)}</div>
+          <div class="sug-sub">${ch.language ? `<span class="lang-badge">${esc(ch.language)}</span>` : ""}${esc(ch.group)}</div>
+        </div>
+      `;
+
+      card.addEventListener("click", () => triggerPlay(ch));
+      return card;
+    }
+
+    /* ── Render main list ── */
+    function renderMatchCards(list) {
+      channelList.innerHTML = "";
+      if (!list.length) {
+        channelList.innerHTML = `<div class="empty-state"><p>No matches found.</p></div>`;
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      list.forEach(ch => frag.appendChild(buildMatchCard(ch)));
+      channelList.appendChild(frag);
+    }
+
+    /* ── Render suggestions ── */
+    function renderSuggestions(excludeUrl) {
+      if (!suggestionsScroll) return;
+      const others = allChannelData.filter(c => c.url !== excludeUrl).slice(0, 20);
+      if (!others.length) { if (suggestionsSection) suggestionsSection.style.display = "none"; return; }
+      suggestionsScroll.innerHTML = "";
+      if (moreCount) moreCount.textContent = others.length;
+      const frag = document.createDocumentFragment();
+      others.forEach(ch => frag.appendChild(buildSugCard(ch)));
+      suggestionsScroll.appendChild(frag);
+      if (suggestionsSection) suggestionsSection.style.display = "";
+    }
+
+    /* ── Category pills ── */
+    function buildCategoryBar() {
+      if (!categoryScroll) return;
+      const groups = ["All", ...new Set(allChannelData.map(c => c.group).filter(Boolean).sort())];
+      categoryScroll.innerHTML = groups.map(g =>
+        `<button class="cat-pill${g === "All" ? " active" : ""}" data-group="${esc(g)}">${esc(g)}</button>`
+      ).join("");
+      categoryScroll.querySelectorAll(".cat-pill").forEach(btn => {
+        btn.addEventListener("click", () => {
+          categoryScroll.querySelectorAll(".cat-pill").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          activeGroup = btn.dataset.group;
+          applyFilter();
+        });
+      });
+      if (categoryBar) categoryBar.style.display = "";
+    }
+
+    /* ── Filter ── */
+    function applyFilter() {
+      const q = (document.getElementById("channel-search")?.value || "").trim().toLowerCase();
+      const filtered = allChannelData.filter(c => {
+        const mg = activeGroup === "All" || c.group === activeGroup;
+        const ms = !q || c.title.toLowerCase().includes(q) || c.group.toLowerCase().includes(q);
+        return mg && ms;
+      });
+      renderMatchCards(filtered);
+    }
+
+    /* ── Trigger playback ── */
+    function triggerPlay(ch) {
+      /* Prefer the globally-exposed playChannel from app.js — avoids the race
+         condition where the sidebar button hasn't been moved by MutationObserver yet. */
+      if (typeof window.playChannel === "function") {
+        window.playChannel(ch);
+      } else {
+        /* Fallback: try the hidden sidebar button (original behaviour) */
+        const sidebarBtn = sidebar.querySelector(`.channel-item[data-url="${CSS.escape(ch.url)}"]`);
+        if (sidebarBtn) sidebarBtn.click();
+      }
+
+      /* Update now-playing info card */
+      if (nowTeams) nowTeams.innerHTML = matchTitleHtml(ch.title);
+      if (nowGroup) nowGroup.textContent = ch.group;
+      if (nowUrl)   nowUrl.textContent   = ch.url;
+      if (nowLogo) {
+        if (ch.logo) {
+          nowLogo.src = ch.logo;
+          nowLogo.classList.remove("hidden");
+          nowLogo.onerror = () => nowLogo.classList.add("hidden");
+        } else {
+          nowLogo.classList.add("hidden");
+        }
+      }
+
+      showPlayer();
+      renderSuggestions(ch.url);
+    }
+
+    /* ── Back button ── */
+    document.getElementById("btn-back-home")?.addEventListener("click", showHome);
+
+    /* ── Search ── */
+    document.getElementById("channel-search")?.addEventListener("input", applyFilter);
+
+    /* ── MutationObserver: intercept app.js channel-item buttons ── */
+    const observer = new MutationObserver(() => {
+      const items = channelList.querySelectorAll(".channel-item");
+      if (!items.length) return;
+
+      const newData = Array.from(items).map(btn => ({
+        url:      btn.dataset.url || "",
+        title:    btn.querySelector(".channel-name")?.textContent?.trim() || "Untitled",
+        group:    btn.querySelector(".channel-group")?.textContent?.trim() || "General",
+        logo:     btn.querySelector("img.channel-logo")?.src || "",
+        language: btn.querySelector(".channel-lang")?.textContent?.trim() || "",
+      })).filter(c => c.url);
+
+      if (!newData.length) return;
+
+      /* Move raw buttons to hidden sidebar */
+      let hiddenList = sidebar.querySelector(".sidebar-channel-list-hidden");
+      if (!hiddenList) {
+        hiddenList = document.createElement("div");
+        hiddenList.className = "sidebar-channel-list-hidden";
+        hiddenList.setAttribute("aria-hidden", "true");
+        sidebar.appendChild(hiddenList);
+      }
+      items.forEach(btn => hiddenList.appendChild(btn));
+      channelList.querySelectorAll(".group-label").forEach(el => hiddenList.appendChild(el));
+      channelList.querySelectorAll(".empty-state").forEach(el => el.remove());
+
+      allChannelData = newData;
+
+      if (!initialized) {
+        initialized = true;
+        if (statEvents)    statEvents.textContent = allChannelData.length;
+        const cats = new Set(allChannelData.map(c => c.group)).size;
+        if (statCats)      statCats.textContent = cats;
+        if (channelCountEl) channelCountEl.textContent = `${allChannelData.length} Live`;
+        buildCategoryBar();
+        if (eventsSection) eventsSection.style.display = "";
+      } else {
+        if (channelCountEl) channelCountEl.textContent = `${allChannelData.length} Live`;
+      }
+
+      applyFilter();
+    });
+
+    observer.observe(channelList, { childList: true, subtree: false });
+
+    /* ══════════════════════════════════════════════════════════
+       UPCOMING MATCHES — TODAY ONLY (IST)
+
+       Logic:
+       1. Get current date & time in IST (UTC+5:30).
+       2. Parse each UPCOMING match's startTime ("HH:MM:SS AM/PM DD-MM-YYYY").
+          The times in fancode.json are already in IST.
+       3. Keep only matches where:
+          a. Date part matches today's IST date (DD-MM-YYYY).
+          b. startTime is still in the future (> now in IST).
+       4. Sort ascending by startTime.
+       5. Refresh every 2 minutes — removes a card once its
+          startTime has passed (it'll be LIVE by then anyway).
+
+       app.js, api/hls.js, api/events.js — completely untouched.
+    ══════════════════════════════════════════════════════════ */
+
+    const RAW_JSON = "https://raw.githubusercontent.com/drmlive/fancode-live-events/refs/heads/main/fancode.json";
+    const UPD_REFRESH = 1 * 60 * 1000;   // 1 minute — re-checks as each match goes live
+
+    const upcomingSection = document.getElementById("upcoming-section");
+    const upcomingList    = document.getElementById("upcoming-list");
+    const upcomingBadge   = document.getElementById("upcoming-badge");
+
+    /* ── IST helpers ──────────────────────────────────────────
+       IST = UTC + 5h 30m = UTC + 330 minutes.
+       We build a "now in IST" Date so we can compare correctly
+       regardless of what timezone the user's browser is in.
+    ── */
+    function nowIST() {
+      const utcMs  = Date.now();
+      const istMs  = utcMs + 330 * 60 * 1000;   // shift to IST
+      return new Date(istMs);                     // this Date's UTC fields == IST wall-clock
+    }
+
+    /*
+      Parse "07:30:00 PM 27-06-2026" (which is already IST wall-clock)
+      → { dateStr: "27-06-2026", totalMinutes: 1170, label: "7:30 PM" }
+      totalMinutes used for chronological sorting across dates.
+    */
+    function parseIST(startTime) {
+      if (!startTime) return null;
+      const parts = startTime.trim().split(/\s+/);
+      // parts: ["07:30:00", "PM", "27-06-2026"]
+      if (parts.length < 3) return null;
+      const [hStr, mStr] = parts[0].split(":");
+      const ampm    = parts[1].toUpperCase();
+      const dateStr = parts[2];                 // "27-06-2026"
+
+      let h = parseInt(hStr, 10);
+      const m = parseInt(mStr, 10) || 0;
+      if (ampm === "PM" && h !== 12) h += 12;
+      if (ampm === "AM" && h === 12) h  = 0;
+
+      const totalMinutes = h * 60 + m;
+      const h12 = h % 12 || 12;
+      const label = `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+
+      return { dateStr, totalMinutes, label };
+    }
+
+    /* ── Build an upcoming card ── */
+    function buildUpcomingCard(m, parsed) {
+      const card = document.createElement("div");
+      card.className = "upcoming-card";
+
+      const imgHtml = m.src
+        ? `<img class="upc-img" src="${esc(m.src)}" alt="" loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : "";
+      const imgFb = `<div class="upc-img-fb" style="${m.src ? "display:none" : "display:flex"}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="2" y="7" width="20" height="15" rx="2"/>
+          </svg>
+        </div>`;
+
+      /* Format date "DD-MM-YYYY" → "4 Jul" */
+      function fmtDate(dateStr) {
+        if (!dateStr) return "";
+        const [dd, mm, yyyy] = dateStr.split("-");
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const mo = months[parseInt(mm, 10) - 1] || mm;
+        return `${parseInt(dd, 10)} ${mo}`;
+      }
+
+      const cat      = (m.event_category || "Sports").toUpperCase();
+      const dateLabel = fmtDate(parsed?.dateStr);
+      const timeLabel = parsed?.label || "";
+
+      card.innerHTML = `
+        <div class="upc-thumb">
+          ${imgHtml}${imgFb}
+          <div class="upc-cat">${esc(cat)}</div>
+        </div>
+        <div class="upc-body">
+          <div class="upc-datetime">
+            <span class="upc-date-chip">${esc(dateLabel)}</span>
+            <span class="upc-time-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              ${esc(timeLabel)} IST
+            </span>
+          </div>
+          <div class="upc-teams">${matchTitleHtml(m.match_name || m.title || "")}</div>
+          <div class="upc-event">${esc(m.event_name || "")}</div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    /* ── Fetch, filter, render ── */
+    async function loadUpcoming() {
+      try {
+        const res = await fetch(`${RAW_JSON}?_=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        /* Show ALL upcoming matches — no date/time filtering.
+           Sort by date first, then time within each date. */
+
+        /* Build an absolute sort key per match (IST epoch minutes from a fixed point) */
+        function sortKey(m) {
+          const p = parseIST(m.startTime);
+          if (!p) return Infinity;
+          const [dd, mm, yyyy] = p.dateStr.split("-").map(Number);
+          /* Days since year 2000 × 1440 + minutes gives a comparable integer */
+          const dayNum = (yyyy - 2000) * 365 + mm * 31 + dd;
+          return dayNum * 1440 + p.totalMinutes;
+        }
+
+        /* Current IST minutes-since-epoch (same scale as sortKey) */
+        function nowKey() {
+          const istMs  = Date.now() + 330 * 60 * 1000;
+          const n      = new Date(istMs);
+          const dd = n.getUTCDate(), mm = n.getUTCMonth() + 1, yyyy = n.getUTCFullYear();
+          const dayNum = (yyyy - 2000) * 365 + mm * 31 + dd;
+          return dayNum * 1440 + n.getUTCHours() * 60 + n.getUTCMinutes();
+        }
+
+        const now = nowKey();
+
+        const next10 = (data.matches || [])
+          .filter(m => m.status === "UPCOMING" && m.startTime)
+          .filter(m => sortKey(m) > now)          /* only future matches */
+          .sort((a, b) => sortKey(a) - sortKey(b))/* nearest first */
+          .slice(0, 5);                           /* next 10 only */
+
+        if (!next10.length) {
+          upcomingSection.style.display = "none";
+          return;
+        }
+
+        upcomingBadge.textContent = next10.length;
+        upcomingList.innerHTML = "";
+        const frag = document.createDocumentFragment();
+        next10.forEach(m => {
+          const p = parseIST(m.startTime);
+          frag.appendChild(buildUpcomingCard(m, p));
+        });
+        upcomingList.appendChild(frag);
+        upcomingSection.style.display = "";
+
+      } catch (e) {
+        /* Silently fail — upcoming is a bonus feature, never breaks the page */
+      }
+    }
+
+    loadUpcoming();
+    setInterval(loadUpcoming, UPD_REFRESH);
+
+  })();
+  </script>
+</body>
+</html>

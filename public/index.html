@@ -485,4 +485,201 @@
         sidebar.appendChild(hiddenList);
       }
       items.forEach(btn => hiddenList.appendChild(btn));
-      channelList.querySelectorAll(".group-lab
+      channelList.querySelectorAll(".group-label").forEach(el => hiddenList.appendChild(el));
+      channelList.querySelectorAll(".empty-state").forEach(el => el.remove());
+
+      allChannelData = newData;
+
+      if (!initialized) {
+        initialized = true;
+        if (statEvents)    statEvents.textContent = allChannelData.length;
+        const cats = new Set(allChannelData.map(c => c.group)).size;
+        if (statCats)      statCats.textContent = cats;
+        if (channelCountEl) channelCountEl.textContent = `${allChannelData.length} Live`;
+        buildCategoryBar();
+        if (eventsSection) eventsSection.style.display = "";
+      } else {
+        if (channelCountEl) channelCountEl.textContent = `${allChannelData.length} Live`;
+      }
+
+      applyFilter();
+    });
+
+    observer.observe(channelList, { childList: true, subtree: false });
+
+    /* ══════════════════════════════════════════════════════════
+       UPCOMING MATCHES — TODAY ONLY (IST)
+
+       Logic:
+       1. Get current date & time in IST (UTC+5:30).
+       2. Parse each UPCOMING match's startTime ("HH:MM:SS AM/PM DD-MM-YYYY").
+          The times in fancode.json are already in IST.
+       3. Keep only matches where:
+          a. Date part matches today's IST date (DD-MM-YYYY).
+          b. startTime is still in the future (> now in IST).
+       4. Sort ascending by startTime.
+       5. Refresh every 2 minutes — removes a card once its
+          startTime has passed (it'll be LIVE by then anyway).
+
+       app.js, api/hls.js, api/events.js — completely untouched.
+    ══════════════════════════════════════════════════════════ */
+
+    const RAW_JSON = "https://raw.githubusercontent.com/drmlive/fancode-live-events/refs/heads/main/fancode.json";
+    const UPD_REFRESH = 1 * 60 * 1000;   // 1 minute — re-checks as each match goes live
+
+    const upcomingSection = document.getElementById("upcoming-section");
+    const upcomingList    = document.getElementById("upcoming-list");
+    const upcomingBadge   = document.getElementById("upcoming-badge");
+
+    /* ── IST helpers ──────────────────────────────────────────
+       IST = UTC + 5h 30m = UTC + 330 minutes.
+       We build a "now in IST" Date so we can compare correctly
+       regardless of what timezone the user's browser is in.
+    ── */
+    function nowIST() {
+      const utcMs  = Date.now();
+      const istMs  = utcMs + 330 * 60 * 1000;   // shift to IST
+      return new Date(istMs);                     // this Date's UTC fields == IST wall-clock
+    }
+
+    /*
+      Parse "07:30:00 PM 27-06-2026" (which is already IST wall-clock)
+      → { dateStr: "27-06-2026", totalMinutes: 1170, label: "7:30 PM" }
+      totalMinutes used for chronological sorting across dates.
+    */
+    function parseIST(startTime) {
+      if (!startTime) return null;
+      const parts = startTime.trim().split(/\s+/);
+      // parts: ["07:30:00", "PM", "27-06-2026"]
+      if (parts.length < 3) return null;
+      const [hStr, mStr] = parts[0].split(":");
+      const ampm    = parts[1].toUpperCase();
+      const dateStr = parts[2];                 // "27-06-2026"
+
+      let h = parseInt(hStr, 10);
+      const m = parseInt(mStr, 10) || 0;
+      if (ampm === "PM" && h !== 12) h += 12;
+      if (ampm === "AM" && h === 12) h  = 0;
+
+      const totalMinutes = h * 60 + m;
+      const h12 = h % 12 || 12;
+      const label = `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+
+      return { dateStr, totalMinutes, label };
+    }
+
+    /* ── Build an upcoming card ── */
+    function buildUpcomingCard(m, parsed) {
+      const card = document.createElement("div");
+      card.className = "upcoming-card";
+
+      const imgHtml = m.src
+        ? `<img class="upc-img" src="${esc(m.src)}" alt="" loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : "";
+      const imgFb = `<div class="upc-img-fb" style="${m.src ? "display:none" : "display:flex"}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="2" y="7" width="20" height="15" rx="2"/>
+          </svg>
+        </div>`;
+
+      /* Format date "DD-MM-YYYY" → "4 Jul" */
+      function fmtDate(dateStr) {
+        if (!dateStr) return "";
+        const [dd, mm, yyyy] = dateStr.split("-");
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const mo = months[parseInt(mm, 10) - 1] || mm;
+        return `${parseInt(dd, 10)} ${mo}`;
+      }
+
+      const cat      = (m.event_category || "Sports").toUpperCase();
+      const dateLabel = fmtDate(parsed?.dateStr);
+      const timeLabel = parsed?.label || "";
+
+      card.innerHTML = `
+        <div class="upc-thumb">
+          ${imgHtml}${imgFb}
+          <div class="upc-cat">${esc(cat)}</div>
+        </div>
+        <div class="upc-body">
+          <div class="upc-datetime">
+            <span class="upc-date-chip">${esc(dateLabel)}</span>
+            <span class="upc-time-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              ${esc(timeLabel)} IST
+            </span>
+          </div>
+          <div class="upc-teams">${matchTitleHtml(m.match_name || m.title || "")}</div>
+          <div class="upc-event">${esc(m.event_name || "")}</div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    /* ── Fetch, filter, render ── */
+    async function loadUpcoming() {
+      try {
+        const res = await fetch(`${RAW_JSON}?_=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        /* Show ALL upcoming matches — no date/time filtering.
+           Sort by date first, then time within each date. */
+
+        /* Build an absolute sort key per match (IST epoch minutes from a fixed point) */
+        function sortKey(m) {
+          const p = parseIST(m.startTime);
+          if (!p) return Infinity;
+          const [dd, mm, yyyy] = p.dateStr.split("-").map(Number);
+          /* Days since year 2000 × 1440 + minutes gives a comparable integer */
+          const dayNum = (yyyy - 2000) * 365 + mm * 31 + dd;
+          return dayNum * 1440 + p.totalMinutes;
+        }
+
+        /* Current IST minutes-since-epoch (same scale as sortKey) */
+        function nowKey() {
+          const istMs  = Date.now() + 330 * 60 * 1000;
+          const n      = new Date(istMs);
+          const dd = n.getUTCDate(), mm = n.getUTCMonth() + 1, yyyy = n.getUTCFullYear();
+          const dayNum = (yyyy - 2000) * 365 + mm * 31 + dd;
+          return dayNum * 1440 + n.getUTCHours() * 60 + n.getUTCMinutes();
+        }
+
+        const now = nowKey();
+
+        const next10 = (data.matches || [])
+          .filter(m => m.status === "UPCOMING" && m.startTime)
+          .filter(m => sortKey(m) > now)          /* only future matches */
+          .sort((a, b) => sortKey(a) - sortKey(b))/* nearest first */
+          .slice(0, 5);                           /* next 10 only */
+
+        if (!next10.length) {
+          upcomingSection.style.display = "none";
+          return;
+        }
+
+        upcomingBadge.textContent = next10.length;
+        upcomingList.innerHTML = "";
+        const frag = document.createDocumentFragment();
+        next10.forEach(m => {
+          const p = parseIST(m.startTime);
+          frag.appendChild(buildUpcomingCard(m, p));
+        });
+        upcomingList.appendChild(frag);
+        upcomingSection.style.display = "";
+
+      } catch (e) {
+        /* Silently fail — upcoming is a bonus feature, never breaks the page */
+      }
+    }
+
+    loadUpcoming();
+    setInterval(loadUpcoming, UPD_REFRESH);
+
+  })();
+  </script>
+</body>
+</html>
